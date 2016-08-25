@@ -8,7 +8,7 @@
 #include "stdio.h"
 #include "strings.h"
 
-void null() {
+void test_null() {
 	uint8_t* result;
 	cc_md4 m;
 	cc_md4_init(&m);
@@ -24,7 +24,7 @@ void null() {
 	printf("\n\n");
 }
 
-void a() {
+void test_a() {
 	uint8_t* result;
 	cc_md4 m;
 	cc_md4_init(&m);
@@ -40,7 +40,7 @@ void a() {
 	printf("\n\n");
 }
 
-void abc() {
+void test_abc() {
 	uint8_t* result;
 	cc_md4 m;
 	cc_md4_init(&m);
@@ -56,8 +56,42 @@ void abc() {
 	printf("\n\n");
 }
 
+void test_foxdog() {
+	uint8_t* result;
+	cc_md4 m;
+	cc_md4_init(&m);
+	cc_md4_update(&m, "The quick brown fox jumps over the lazy dog", 43);
+	cc_md4_finalize(&m);
+
+	printf("Message:  The quick brown fox jumps over the lazy dog\nExpected: 1bee69a46ba811185c194762abaeae90\nResult:   ");
+
+	for (int i = 0; i < 16; i ++) {
+		printf("%02x", m.digest[i]);
+	}
+
+	printf("\n\n");
+}
+
+void test_foxcog() {
+	uint8_t* result;
+	cc_md4 m;
+	cc_md4_init(&m);
+	cc_md4_update(&m, "The quick brown fox jumps over the lazy cog", 43);
+	cc_md4_finalize(&m);
+
+	printf("Message:  The quick brown fox jumps over the lazy cog\nExpected: b86e130ce7028da59e672d56ad0113df\nResult:   ");
+
+	for (int i = 0; i < 16; i ++) {
+		printf("%02x", m.digest[i]);
+	}
+
+	printf("\n\n");
+}
+
 int main() {
-	null();
-	a();
-	abc();
+	test_null();
+	test_a();
+	test_abc();
+	test_foxdog();
+	test_foxcog();
 }
