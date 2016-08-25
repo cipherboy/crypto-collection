@@ -9,11 +9,12 @@ with the various standards bodies and their implementation requirements.
 
 Note that, in general, raw cryptographic primitives are considered unsafe.
 
-Later work to include translating the algorithms into alternate langauges
+Later work to include translating the algorithms into alternate languages
 including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 
-## Algorithms
+## Algorithms in Pure C
 
 | Algorithm      | x86_64         | ppc64be (P7)   | ppc64el (P8)   |
 | :------------- | :------------- | :------------- | :------------- |
 | md4            | yes            | yes            | yes            |
+| md5            | yes            | yes            | yes            |
