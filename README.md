@@ -14,6 +14,6 @@ including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 
 ## Algorithms
 
-| Algorithm      | x86_64         | ppc64be (P7    | ppc64el (P8    |
+| Algorithm      | x86_64         | ppc64be (P7)   | ppc64el (P8)   |
 | :------------- | :------------- | :------------- | :------------- |
 | md4            | yes            | yes            | yes            |
