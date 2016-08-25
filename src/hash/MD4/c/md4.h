@@ -18,7 +18,7 @@ typedef struct {
 	uint32_t s[4];
 	uint64_t len;
 
-	uint8_t* partial;
+	uint8_t partial[64];
 	uint64_t p_len;
 } cc_md4;
 
@@ -38,8 +38,15 @@ static inline uint32_t cc_md4_rotl32(uint32_t data, uint32_t count) {
 	return ((data << count) | (data >> (32 - count)));
 }
 
-static inline void cc_md4_core(cc_md4* m, uint32_t block[16]) {
+static inline void cc_md4_core(cc_md4* m) {
+	int i = 0;
+	uint32_t block[16];
 	uint32_t s[4];
+
+	for (i = 0; i < 16; i++) {
+		block[i] = (((uint32_t) m->partial[i*4 + 3]) << 24) | (((uint32_t) m->partial[i*4 + 2]) << 16) | (((uint32_t) m->partial[i*4 + 1]) << 8) | (((uint32_t) m->partial[i*4 + 0]) << 0);
+	}
+
 	// Duplicate state
 	s[0] = m->s[0];
 	s[1] = m->s[1];
@@ -108,9 +115,12 @@ static inline void cc_md4_core(cc_md4* m, uint32_t block[16]) {
 }
 
 extern inline void cc_md4_init(cc_md4* m) {
-	int i = 0;
-	for (i = 0; i < 16; i++) {
-		m->digest[i] = 0;
+	m->p_len = 0;
+	for (m->p_len = 0; m->p_len < 16; m->p_len++) {
+		m->digest[m->p_len] = 0;
+	}
+	for (m->p_len = 0; m->p_len < 64; m->p_len++) {
+		m->partial[m->p_len] = 0;
 	}
 
 	m->s[0] = 0x67452301;
@@ -123,10 +133,58 @@ extern inline void cc_md4_init(cc_md4* m) {
 }
 
 extern inline void cc_md4_update(cc_md4* m, char* msg, uint64_t len) {
+	int i = 0;
 
+	m->len += len;
+
+	for (i = 0; i < len; i++) {
+		if (m->p_len == 64) {
+			m->p_len = 0;
+			cc_md4_core(m);
+		}
+
+		m->partial[m->p_len] = (uint8_t)((unsigned char) msg[i]);
+		m->p_len += 1;
+	}
 }
 
 extern inline void cc_md4_finalize(cc_md4* m) {
+	if (m->p_len > 55) {
+		m->partial[m->p_len] = 0x80;
+		m->p_len += 1;
+		for (; m->p_len < 64; m->p_len++) {
+			m->partial[m->p_len] = 0x00;
+		}
+
+		m->p_len = 0;
+		cc_md4_core(m);
+	} else {
+		m->partial[m->p_len] = 0x80;
+		m->p_len += 1;
+	}
+
+	for (; m->p_len < 64; m->p_len++) {
+		m->partial[m->p_len] = 0x00;
+	}
+
+	m->partial[56] = (uint8_t) (m->len >> 24);
+	m->partial[57] = (uint8_t) (m->len >> 16);
+	m->partial[58] = (uint8_t) (m->len >> 8);
+	m->partial[59] = (uint8_t) (m->len >> 0);
+	m->partial[60] = (uint8_t) (m->len >> 56);
+	m->partial[61] = (uint8_t) (m->len >> 48);
+	m->partial[62] = (uint8_t) (m->len >> 40);
+	m->partial[63] = (uint8_t) (m->len >> 32);
+
+	cc_md4_core(m);
+
+	for (m->p_len = 0; m->p_len < 4; m->p_len++) {
+		m->digest[(m->p_len*4)+0] = (uint8_t) (m->s[m->p_len] >> 0);
+		m->digest[(m->p_len*4)+1] = (uint8_t) (m->s[m->p_len] >> 8);
+		m->digest[(m->p_len*4)+2] = (uint8_t) (m->s[m->p_len] >> 16);
+		m->digest[(m->p_len*4)+3] = (uint8_t) (m->s[m->p_len] >> 24);
+	}
+	m->p_len = 0;
 }
 
 extern inline uint8_t* cc_md4_sum(cc_md4* m, char* msg) {
