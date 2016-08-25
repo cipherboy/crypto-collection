@@ -10,8 +10,7 @@
 
 void test_null()
 {
-    uint8_t* result;
-    md4 m;
+    struct md4 m;
     md4_init(&m);
     md4_update(&m, "", 0);
     md4_finalize(&m);
@@ -27,8 +26,7 @@ void test_null()
 
 void test_a()
 {
-    uint8_t* result;
-    md4 m;
+    struct md4 m;
     md4_init(&m);
     md4_update(&m, "a", 1);
     md4_finalize(&m);
@@ -44,8 +42,7 @@ void test_a()
 
 void test_abc()
 {
-    uint8_t* result;
-    md4 m;
+    struct md4 m;
     md4_init(&m);
     md4_update(&m, "abc", 3);
     md4_finalize(&m);
@@ -61,8 +58,7 @@ void test_abc()
 
 void test_foxdog()
 {
-    uint8_t* result;
-    md4 m;
+    struct md4 m;
     md4_init(&m);
     md4_update(&m, "The quick brown fox jumps over the lazy dog", 43);
     md4_finalize(&m);
@@ -78,8 +74,7 @@ void test_foxdog()
 
 void test_foxcog()
 {
-    uint8_t* result;
-    md4 m;
+    struct md4 m;
     md4_init(&m);
     md4_update(&m, "The quick brown fox jumps over the lazy cog", 43);
     md4_finalize(&m);
