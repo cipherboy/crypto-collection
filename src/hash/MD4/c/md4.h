@@ -27,7 +27,6 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "stdio.h"
 
 /*
  * struct md4
