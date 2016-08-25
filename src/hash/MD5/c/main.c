@@ -4,50 +4,18 @@
  * Tests for the md5 hash algorithm.
 **/
 
-#include "md4.h"
+#include "md5.h"
 #include "stdio.h"
 #include "strings.h"
 
 void test_null()
 {
-    struct md4 m;
-    md4_init(&m);
-    md4_update(&m, "", 0);
-    md4_finalize(&m);
+    struct md5 m;
+    md5_init(&m);
+    md5_update(&m, "", 0);
+    md5_finalize(&m);
 
-    printf("Message:  <null>\nExpected: 31d6cfe0d16ae931b73c59d7e0c089c0\nResult:   ");
-
-    for (int i = 0; i < 16; i ++) {
-        printf("%02x", m.digest[i]);
-    }
-
-    printf("\n\n");
-}
-
-void test_a()
-{
-    struct md4 m;
-    md4_init(&m);
-    md4_update(&m, "a", 1);
-    md4_finalize(&m);
-
-    printf("Message:  a\nExpected: bde52cb31de33e46245e05fbdbd6fb24\nResult:   ");
-
-    for (int i = 0; i < 16; i ++) {
-        printf("%02x", m.digest[i]);
-    }
-
-    printf("\n\n");
-}
-
-void test_abc()
-{
-    struct md4 m;
-    md4_init(&m);
-    md4_update(&m, "abc", 3);
-    md4_finalize(&m);
-
-    printf("Message:  abc\nExpected: a448017aaf21d8525fc10ae87aa6729d\nResult:   ");
+    printf("Message:  <null>\nExpected: d41d8cd98f00b204e9800998ecf8427e\nResult:   ");
 
     for (int i = 0; i < 16; i ++) {
         printf("%02x", m.digest[i]);
@@ -58,12 +26,12 @@ void test_abc()
 
 void test_foxdog()
 {
-    struct md4 m;
-    md4_init(&m);
-    md4_update(&m, "The quick brown fox jumps over the lazy dog", 43);
-    md4_finalize(&m);
+    struct md5 m;
+    md5_init(&m);
+    md5_update(&m, "The quick brown fox jumps over the lazy dog", 43);
+    md5_finalize(&m);
 
-    printf("Message:  The quick brown fox jumps over the lazy dog\nExpected: 1bee69a46ba811185c194762abaeae90\nResult:   ");
+    printf("Message:  The quick brown fox jumps over the lazy dog\nExpected: 9e107d9d372bb6826bd81d3542a419d6\nResult:   ");
 
     for (int i = 0; i < 16; i ++) {
         printf("%02x", m.digest[i]);
@@ -72,14 +40,14 @@ void test_foxdog()
     printf("\n\n");
 }
 
-void test_foxcog()
+void test_foxdogperiod()
 {
-    struct md4 m;
-    md4_init(&m);
-    md4_update(&m, "The quick brown fox jumps over the lazy cog", 43);
-    md4_finalize(&m);
+    struct md5 m;
+    md5_init(&m);
+    md5_update(&m, "The quick brown fox jumps over the lazy dog.", 44);
+    md5_finalize(&m);
 
-    printf("Message:  The quick brown fox jumps over the lazy cog\nExpected: b86e130ce7028da59e672d56ad0113df\nResult:   ");
+    printf("Message:  The quick brown fox jumps over the lazy dog.\nExpected: e4d909c290d0fb1ca068ffaddf22cbd0\nResult:   ");
 
     for (int i = 0; i < 16; i ++) {
         printf("%02x", m.digest[i]);
@@ -91,8 +59,6 @@ void test_foxcog()
 int main()
 {
     test_null();
-    test_a();
-    test_abc();
     test_foxdog();
-    test_foxcog();
+    test_foxdogperiod();
 }
