@@ -19,3 +19,5 @@ including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 | md4            | yes            | yes            | yes            |
 | md5            | yes            | yes            | yes            |
 | sha1           | yes            | yes            | yes            |
+| sha224         | yes            | yes            | yes            |
+| sha256         | yes            | yes            | yes            |
