@@ -31,7 +31,7 @@
 struct sha256 {
     uint8_t digest[32];
 
-    uint32_t h[5];
+    uint32_t h[8];
     uint64_t len;
 
     uint8_t partial[64];
@@ -75,17 +75,34 @@ extern inline uint32_t sha256_ssig0(uint32_t x)
 
 extern inline uint32_t sha256_ssig1(uint32_t x)
 {
-    return sha256_rotr32(x, 17) ^ sha256_rotr32(x, 19) ^ (x >> 11);
+    return sha256_rotr32(x, 17) ^ sha256_rotr32(x, 19) ^ (x >> 10);
 }
 
 extern inline void sha256_core(struct sha256* m)
 {
     size_t t = 0;
-    uint32_t w[80];
-    uint32_t h[5];
-    uint32_t temp;
+    uint32_t w[64];
+    uint32_t h[8];
+    uint32_t tmp1;
+    uint32_t tmp2;
 
-    // Message has to be processed as a little endian integer
+    static const uint32_t K[64] = {
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
+        0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
+        0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7,
+        0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+        0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152,
+        0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
+        0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+        0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819,
+        0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08,
+        0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,
+        0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+        0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    };
+
+    // Message has to be processed as a big endian integer
     for (t = 0; t < 16; t++) {
         w[t] = (((
                      uint32_t) m->partial[t * 4 + 0]) << 24) | (((
@@ -94,6 +111,10 @@ extern inline void sha256_core(struct sha256* m)
                                                      uint32_t) m->partial[t * 4 + 3]) << 0);
     }
 
+    for (t = 16; t < 64; t++) {
+        w[t] = sha256_ssig1(w[t - 2]) + w[t - 7] + sha256_ssig0(
+                   w[t - 15]) + w[t - 16];
+    }
 
     // Duplicate state into temporary variables
     h[0] = m->h[0];
@@ -101,6 +122,23 @@ extern inline void sha256_core(struct sha256* m)
     h[2] = m->h[2];
     h[3] = m->h[3];
     h[4] = m->h[4];
+    h[5] = m->h[5];
+    h[6] = m->h[6];
+    h[7] = m->h[7];
+
+    for (t = 0; t < 64; t++) {
+        tmp1 = h[7] + sha256_bsig1(h[4]) + sha256_ch(h[4], h[5], h[6]) + K[t] + w[t];
+        tmp2 = sha256_bsig0(h[0]) + sha256_mj(h[0], h[1], h[2]);
+
+        h[7] = h[6];
+        h[6] = h[5];
+        h[5] = h[4];
+        h[4] = h[3] + tmp1;
+        h[3] = h[2];
+        h[2] = h[1];
+        h[1] = h[0];
+        h[0] = tmp1 + tmp2;
+    }
 
     // Add temporary variables back into state.
     m->h[0] += h[0];
@@ -108,6 +146,9 @@ extern inline void sha256_core(struct sha256* m)
     m->h[2] += h[2];
     m->h[3] += h[3];
     m->h[4] += h[4];
+    m->h[5] += h[5];
+    m->h[6] += h[6];
+    m->h[7] += h[7];
 }
 
 extern inline void sha256_init(struct sha256* m)
@@ -119,6 +160,15 @@ extern inline void sha256_init(struct sha256* m)
     for (m->p_len = 0; m->p_len < 64; m->p_len++) {
         m->partial[m->p_len] = 0;
     }
+
+    m->h[0] = 0x6a09e667;
+    m->h[1] = 0xbb67ae85;
+    m->h[2] = 0x3c6ef372;
+    m->h[3] = 0xa54ff53a;
+    m->h[4] = 0x510e527f;
+    m->h[5] = 0x9b05688c;
+    m->h[6] = 0x1f83d9ab;
+    m->h[7] = 0x5be0cd19;
 
     m->len = 0;
     m->p_len = 0;
