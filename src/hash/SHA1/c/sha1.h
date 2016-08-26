@@ -76,7 +76,7 @@ extern inline void sha1_core(struct sha1* m)
     uint32_t h[5];
     uint32_t temp;
 
-    // Message has to be processed as a little endian integer
+    // Message has to be processed as a big endian integer
     for (t = 0; t < 16; t++) {
         w[t] = (((
                      uint32_t) m->partial[t * 4 + 0]) << 24) | (((
