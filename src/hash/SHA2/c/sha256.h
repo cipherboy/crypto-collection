@@ -22,8 +22,8 @@
 */
 
 #pragma once
-#ifndef CC_sha256_H
-#define CC_sha256_H
+#ifndef CC_SHA256_H
+#define CC_SHA256_H
 
 #include "stdint.h"
 #include "string.h"

@@ -22,8 +22,8 @@
 */
 
 #pragma once
-#ifndef CC_sha384_H
-#define CC_sha384_H
+#ifndef CC_SHA384_H
+#define CC_SHA384_H
 
 #include "stdint.h"
 #include "string.h"
