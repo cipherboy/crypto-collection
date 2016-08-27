@@ -6,6 +6,7 @@
 
 #include "sha224.h"
 #include "sha256.h"
+#include "sha384.h"
 #include "sha512.h"
 #include "stdio.h"
 #include "strings.h"
@@ -41,7 +42,7 @@ void test_sha256_null()
 
     printf("\n\n");
 }
-/*
+
 void test_sha384_null()
 {
     struct sha384 m;
@@ -49,14 +50,14 @@ void test_sha384_null()
     sha384_update(&m, "", 0);
     sha384_finalize(&m);
 
-    printf("Message:  <null>\nExpected: d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f\nResult:   ");
+    printf("Message:  <null>\nExpected: 38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b\nResult:   ");
 
-    for (int i = 0; i < 28; i ++) {
+    for (int i = 0; i < 48; i ++) {
         printf("%02x", m.digest[i]);
     }
 
     printf("\n\n");
-}*/
+}
 
 void test_sha512_null()
 {
@@ -105,7 +106,7 @@ void test_sha256_foxdog()
 
     printf("\n\n");
 }
-/*
+
 void test_sha384_foxdog()
 {
     struct sha384 m;
@@ -113,15 +114,15 @@ void test_sha384_foxdog()
     sha384_update(&m, "The quick brown fox jumps over the lazy dog", 43);
     sha384_finalize(&m);
 
-    printf("Message:  The quick brown fox jumps over the lazy dog\nExpected: 730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525\nResult:   ");
+    printf("Message:  The quick brown fox jumps over the lazy dog\nExpected: ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1\nResult:   ");
 
-    for (int i = 0; i < 28; i ++) {
+    for (int i = 0; i < 48; i ++) {
         printf("%02x", m.digest[i]);
     }
 
     printf("\n\n");
 }
-*/
+
 void test_sha512_foxdog()
 {
     struct sha512 m;
@@ -169,7 +170,7 @@ void test_sha256_foxcog()
 
     printf("\n\n");
 }
-/*
+
 void test_sha384_foxcog()
 {
     struct sha384 m;
@@ -177,14 +178,14 @@ void test_sha384_foxcog()
     sha384_update(&m, "The quick brown fox jumps over the lazy cog", 43);
     sha384_finalize(&m);
 
-    printf("Message:  The quick brown fox jumps over the lazy cog\nExpected: fee755f44a55f20fb3362cdc3c493615b3cb574ed95ce610ee5b1e9b\nResult:   ");
+    printf("Message:  The quick brown fox jumps over the lazy cog\nExpected: 098cea620b0978caa5f0befba6ddcf22764bea977e1c70b3483edfdf1de25f4b40d6cea3cadf00f809d422feb1f0161b\nResult:   ");
 
-    for (int i = 0; i < 28; i ++) {
+    for (int i = 0; i < 48; i ++) {
         printf("%02x", m.digest[i]);
     }
 
     printf("\n\n");
-}*/
+}
 
 void test_sha512_foxcog()
 {
@@ -213,6 +214,11 @@ int main()
     test_sha256_null();
     test_sha256_foxdog();
     test_sha256_foxcog();
+
+    printf("\nSHA384\n");
+    test_sha384_null();
+    test_sha384_foxdog();
+    test_sha384_foxcog();
 
     printf("\nSHA512\n");
     test_sha512_null();
