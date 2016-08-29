@@ -12,13 +12,13 @@
 #include "stdint.h"
 #include "stdlib.h"
 
-static const uint32_t blowfish_initial_subkeys[18] = {
+const uint32_t blowfish_initial_subkeys[18] = {
     0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0,
     0x082efa98, 0xec4e6c89, 0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c,
     0xc0ac29b7, 0xc97c50dd, 0x3f84d5b5, 0xb5470917, 0x9216d5d9, 0x8979fb1b
 };
 
-static const uint32_t blowfish_initial_sbox[1024] = {
+const uint32_t blowfish_initial_sbox[1024] = {
     0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96,
     0xba7c9045, 0xf12c7f99, 0x24a19947, 0xb3916cf7, 0x0801f2e2, 0x858efc16,
     0x636920d8, 0x71574e69, 0xa458fea3, 0xf4933d7e, 0x0d95748f, 0x728eb658,
@@ -198,16 +198,20 @@ struct blowfish {
     uint32_t S[1024];
 };
 
-extern inline uint32_t blowfish_feistel(struct blowfish* bf, uint32_t value) {
+extern inline uint32_t blowfish_feistel(struct blowfish* bf, uint32_t value)
+{
     uint8_t a = value >> 24;
     uint8_t b = value >> 16;
     uint8_t c = value >>  8;
     uint8_t d = value >>  0;
 
-    return ((bf->S[0*256 + a] + bf->S[1*256 + b]) ^ bf->S[2*256 + c]) + bf->S[3*256 + d];
+    return ((bf->S[0 * 256 + a] + bf->S[1 * 256 + b]) ^ bf->S[2 * 256 + c]) +
+           bf->S[3 * 256 + d];
 }
 
-extern inline void blowfish_encrypt(struct blowfish* bf, uint32_t* left, uint32_t* right) {
+extern inline void blowfish_encrypt(struct blowfish* bf, uint32_t* left,
+                                    uint32_t* right)
+{
     size_t i = 0;
     uint32_t tmp = 0;
     for (i = 0; i < 16; i++) {
@@ -223,7 +227,9 @@ extern inline void blowfish_encrypt(struct blowfish* bf, uint32_t* left, uint32_
     *left = (*left) ^ bf->P[17];
 }
 
-extern inline void blowfish_decrypt(struct blowfish* bf, uint32_t* left, uint32_t* right) {
+extern inline void blowfish_decrypt(struct blowfish* bf, uint32_t* left,
+                                    uint32_t* right)
+{
     size_t i = 0;
     uint32_t tmp = 0;
     for (i = 17; i > 1; i--) {
@@ -239,7 +245,9 @@ extern inline void blowfish_decrypt(struct blowfish* bf, uint32_t* left, uint32_
     *left = (*left) ^ bf->P[0];
 }
 
-extern inline void blowfish_init(struct blowfish* bf, uint32_t* key, size_t key_len) {
+extern inline void blowfish_init(struct blowfish* bf, uint32_t* key,
+                                 size_t key_len)
+{
     size_t i = 0;
     size_t k = 0;
     uint32_t left = 0;
@@ -257,15 +265,15 @@ extern inline void blowfish_init(struct blowfish* bf, uint32_t* key, size_t key_
     }
 
     for (i = 0; i < 9; i++) {
-        blowfish_encrypt(left, right);
-        bf->P[i*2 + 0] = left;
-        bf->P[i*2 + 1] = right;
+        blowfish_encrypt(bf, &left, &right);
+        bf->P[i * 2 + 0] = left;
+        bf->P[i * 2 + 1] = right;
     }
 
     for (i = 0; i < 512; i++) {
-        blowfish_encrypt(left, right);
-        bf->S[i*2 + 0] = left;
-        bf->S[i*2 + 1] = right;
+        blowfish_encrypt(bf, &left, &right);
+        bf->S[i * 2 + 0] = left;
+        bf->S[i * 2 + 1] = right;
     }
 }
 
