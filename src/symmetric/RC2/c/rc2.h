@@ -85,8 +85,9 @@ extern inline void rc2_init(struct rc2* r, uint8_t* key, size_t len,
 
 extern inline void rc2_mix(struct rc2* r, size_t i)
 {
-    r->R[i] = r->R[i] + r->key.K[r->j] + (r->R[i - 1] & r->R[i - 2]) + ((
-                  ~r->R[i - 1]) & r->R[i - 3]);
+    r->R[i] = r->R[i] + r->key.K[r->j]
+              + (r->R[((i - 1) + 4) % 4] & r->R[((i - 2) + 4) % 4])
+              + ((~(r->R[((i - 1) + 4) % 4])) & r->R[((i - 3) + 4) % 4]);
     r->j = r->j + 1;
 
     r->R[i] = rc2_rotl16(r->R[i], r->s[i]);
@@ -102,7 +103,7 @@ extern inline void rc2_mix_round(struct rc2* r)
 
 extern inline void rc2_mash(struct rc2* r, size_t i)
 {
-    r->R[i] = r->R[i] + r->key.K[r->R[i - 1] & 63];
+    r->R[i] = r->R[i] + r->key.K[r->R[((i - 1) + 4) % 4] & 63];
 }
 
 extern inline void rc2_mash_round(struct rc2* r)
