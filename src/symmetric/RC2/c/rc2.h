@@ -40,6 +40,11 @@ extern inline uint16_t rc2_rotl16(uint16_t data, uint16_t count)
     return ((data << count) | (data >> (16 - count)));
 }
 
+extern inline uint16_t rc2_rotr16(uint16_t data, uint16_t count)
+{
+    return ((data << (16 - count)) | (data >> count));
+}
+
 extern inline void rc2_init(struct rc2* r, uint8_t* key, size_t len,
                             size_t effective)
 {
@@ -143,5 +148,76 @@ extern inline void rc2_encrypt(struct rc2* r, uint16_t* data)
     rc2_mix_round(r);
     rc2_mix_round(r);
 }
+
+
+extern inline void rc2_r_mix(struct rc2* r, size_t i)
+{
+    r->R[i] = rc2_rotr16(r->R[i], r->s[i]);
+    r->R[i] = r->R[i] - r->key.K[r->j]
+              - (r->R[((i - 1) + 4) % 4] & r->R[((i - 2) + 4) % 4])
+              - ((~(r->R[((i - 1) + 4) % 4])) & r->R[((i - 3) + 4) % 4]);
+    r->j = r->j - 1;
+
+}
+
+extern inline void rc2_r_mix_round(struct rc2* r)
+{
+    rc2_r_mix(r, 3);
+    rc2_r_mix(r, 2);
+    rc2_r_mix(r, 1);
+    rc2_r_mix(r, 0);
+}
+
+extern inline void rc2_r_mash(struct rc2* r, size_t i)
+{
+    r->R[i] = r->R[i] - r->key.K[r->R[((i - 1) + 4) % 4] & 63];
+}
+
+extern inline void rc2_r_mash_round(struct rc2* r)
+{
+    rc2_r_mash(r, 3);
+    rc2_r_mash(r, 2);
+    rc2_r_mash(r, 1);
+    rc2_r_mash(r, 0);
+}
+
+extern inline void rc2_decrypt(struct rc2* r, uint16_t* data)
+{
+    r->R[0] = data[0];
+    r->R[1] = data[1];
+    r->R[2] = data[2];
+    r->R[3] = data[3];
+
+    r->s[0] = 1;
+    r->s[1] = 2;
+    r->s[2] = 3;
+    r->s[3] = 5;
+
+    r->j = 63;
+
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+
+    rc2_r_mash_round(r);
+
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+
+    rc2_r_mash_round(r);
+
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+    rc2_r_mix_round(r);
+}
+
 
 #endif
