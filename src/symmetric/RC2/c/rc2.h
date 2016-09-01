@@ -9,7 +9,6 @@
 #ifndef CC_RC2_H
 #define CC_RC2_H
 
-#include "stdint.h"
 #include "stdlib.h"
 #include "stdio.h"
 
@@ -48,13 +47,6 @@ extern inline void rc2_init(struct rc2* r, uint8_t* key, size_t len,
     size_t i = 0;
     size_t T8 = (effective + 7) / 8;
     size_t TM = 255 % (2 << (8 + effective - 8 * T8));
-
-    printf("T8: %zu\n", T8);
-    printf("TM: %zu\n", TM);
-
-    for (t = 0; t < 128; t++) {
-        r->key.L[t] = 0;
-    }
 
     for (t = 0; t < len; t++) {
         r->key.L[t] = key[t];
