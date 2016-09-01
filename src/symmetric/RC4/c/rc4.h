@@ -10,7 +10,7 @@
 #define CC_RC4_H
 
 #include "stdlib.h"
-#include "stdio.h"
+#include "stdint.h"
 
 struct rc4 {
     uint8_t S[256];
