@@ -24,3 +24,4 @@ including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 | sha384         | yes            | yes            | yes            |
 | sha512         | yes            | yes            | yes            |
 | blowfish       | yes            | yes            | yes            |
+| rc2            | yes            | no             | no             |
