@@ -221,17 +221,13 @@ static inline uint32_t des_f(uint32_t input, uint64_t key)
 
     expanded_input = expanded_input ^ key;
 
-    uint8_t shift[8] = {42, 36, }
-
     for (pos = 0; pos < 8; pos++) {
-        result << 4;
-        data = (uint8_t) (expanded_input >> (48 - 6*(pos+1)));
-        col = data & 0b011110;
-        row = ((data & 0b100000) >> 5) + data *0b000001;
+        result = result << 4;
+        data = (uint8_t) (expanded_input >> (48 - 6 * (pos + 1)));
+        col = (data & 0x1e) >> 1;
+        row = ((data & 0x20) >> 5) + data * 0x01;
 
-        
-
-        result += des_primitive_functions[pos][row*16 + col];
+        result += des_primitive_functions[pos][row * 16 + col];
     }
 
     return result;

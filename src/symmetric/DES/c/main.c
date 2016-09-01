@@ -14,6 +14,12 @@ int main()
     uint64_t plain = 0x0000000000000000ull;
     uint64_t expected = 0x95A8D72813DAA94Dull;
 
+    des_init(&d, key);
+
+    for (size_t i = 0; i < 16; i++) {
+        printf("Subkey[%zu]: %16llx\n", i, d.skey[i] & 0xffffffffffff);
+    }
+
     printf("Key: %16llx\n", key);
     printf("Plaintext: %16llx\n", plain);
     printf("Actual: %16llx\n", des_encrypt_block(&d, plain));
