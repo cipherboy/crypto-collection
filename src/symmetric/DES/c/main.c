@@ -17,13 +17,13 @@ int main()
     des_init(&d, key);
 
     for (size_t i = 0; i < 16; i++) {
-        printf("Subkey[%zu]: %16llx\n", i, d.skey[i] & 0xffffffffffff);
+        printf("Subkey[%zu]: %16lx\n", i, d.skey[i] & 0xffffffffffff);
     }
 
-    printf("Key: %16llx\n", key);
-    printf("Plaintext: %16llx\n", plain);
-    printf("Actual: %16llx\n", des_encrypt_block(&d, plain));
-    printf("Expected: %16llx\n", expected);
+    printf("Key: %16lx\n", key);
+    printf("Plaintext: %16lx\n", plain);
+    printf("Actual: %16lx\n", des_encrypt_block(&d, plain));
+    printf("Expected: %16lx\n", expected);
 
     return 0;
 }

@@ -11,6 +11,7 @@
 
 #include "stdint.h"
 #include "stdlib.h"
+#include "stdio.h"
 
 const uint8_t des_initial_permutation_shifts[64] = {
     58, 50, 42, 34, 26, 18, 10,  2,
@@ -141,7 +142,7 @@ static inline void des_choice_1_permute(uint32_t* C, uint32_t* D,
     uint64_t result = 0;
     size_t pos = 0;
 
-    for (pos = 0; pos < 64; pos++) {
+    for (pos = 0; pos < 63; pos++) {
         result = result << 1;
         result += (key >> (64 - des_permuted_choice_1[pos])) & 1;
     }
@@ -157,9 +158,14 @@ static inline void des_choice_2_permute(uint64_t* output, uint32_t C,
     uint64_t result = 0;
     size_t pos = 0;
 
-    for (pos = 0; pos < 64; pos++) {
+    printf("input: %16lx\n", input);
+
+    for (pos = 0; pos < 46; pos++) {
+        printf("Round: %zu\n", pos);
+        printf("b: %16lx\n", result);
         result = result << 1;
-        result += (input >> (64 - des_permuted_choice_2[pos])) & 1;
+        result ^= (input >> (64 - des_permuted_choice_2[pos])) & 1;
+        printf("a: %16lx\n\n", result);
     }
 
     *output = result;
@@ -236,19 +242,28 @@ static inline uint32_t des_f(uint32_t input, uint64_t key)
 static inline void des_init(struct des* d, uint64_t key)
 {
     size_t n = 0;
-    uint32_t C;
-    uint32_t D;
+    uint32_t C = 0;
+    uint32_t D = 0;
 
     des_choice_1_permute(&C, &D, key);
+
+    printf("CD: %08x %08x\n", C, D);
 
     C = des_rotl32(C, des_shift_sizes[0]);
     D = des_rotl32(D, des_shift_sizes[0]);
 
+    printf("CD: %08x %08x\n", C, D);
+
     for (n = 0; n < 15; n++) {
+        printf("CD: %08x %08x\n", C, D);
         des_choice_2_permute(&(d->skey[n]), C, D);
+
+        return;
 
         C = des_rotl32(C, des_shift_sizes[n + 1]);
         D = des_rotl32(D, des_shift_sizes[n + 1]);
+
+        printf("CD: %08x %08x\n", C, D);
     }
 
     des_choice_2_permute(&(d->skey[15]), C, D);
