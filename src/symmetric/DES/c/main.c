@@ -6,6 +6,7 @@
 
 #include "des.h"
 #include "stdio.h"
+#include "inttypes.h"
 
 int main()
 {
@@ -16,11 +17,11 @@ int main()
 
     des_init(&d, key);
 
-    printf("Key:       %16llx\n", key);
-    printf("Plaintext: %16llx\n", plain);
-    printf("Actual:    %16llx\n", des_encrypt_block(&d, plain));
-    printf("Expected:  %16llx\n", expected);
-    printf("Decrypted: %16llx\n", des_decrypt_block(&d, expected));
+    printf("Key:       %" PRIx64 "\n", key);
+    printf("Plaintext: %" PRIx64 "\n", plain);
+    printf("Actual:    %" PRIx64 "\n", des_encrypt_block(&d, plain));
+    printf("Expected:  %" PRIx64 "\n", expected);
+    printf("Decrypted: %" PRIx64 "\n", des_decrypt_block(&d, expected));
 
     return 0;
 }
