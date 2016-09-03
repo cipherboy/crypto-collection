@@ -26,3 +26,4 @@ including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 | blowfish       | yes            | yes            | yes            |
 | rc2            | yes            | yes            | yes            |
 | rc4            | yes            | yes            | yes            |
+| des            | yes            | yes            | yes            |
