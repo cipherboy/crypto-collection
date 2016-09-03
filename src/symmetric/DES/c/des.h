@@ -158,14 +158,9 @@ static inline void des_choice_2_permute(uint64_t* output, uint32_t C,
     uint64_t result = 0;
     size_t pos = 0;
 
-    printf("input: %16llx\n", input);
-
     for (pos = 0; pos < 48; pos++) {
-        printf("Round: %zu\n", pos);
-        printf("b: %16llx\n", result);
         result = result << 1;
         result += (input >> (56 - des_permuted_choice_2[pos])) & 1;
-        printf("a: %16llx\n\n", result);
     }
 
     *output = result;
@@ -201,15 +196,27 @@ static inline void des_inverse_permute(uint64_t* output, uint32_t left,
     *output = result;
 }
 
+static inline uint32_t des_permute_p(uint32_t input)
+{
+    uint32_t result = 0;
+    size_t pos = 0;
+
+    for (pos = 0; pos < 32; pos++) {
+        result = result << 1;
+        result += (input >> (32 - des_primitive_function_p[pos])) & 1;
+    }
+
+    return result;
+}
+
 static inline uint64_t des_expand(uint32_t input)
 {
     uint64_t result = 0;
     size_t pos = 0;
 
-    for (pos = 0; pos < 64; pos++) {
+    for (pos = 0; pos < 48; pos++) {
         result = result << 1;
-        result += (((uint64_t) input) >> (64 - des_inverse_permutation_shifts[pos])) &
-                  1;
+        result += (input >> (32 - des_expand_shifts[pos])) & 1;
     }
 
     return result;
@@ -229,12 +236,14 @@ static inline uint32_t des_f(uint32_t input, uint64_t key)
 
     for (pos = 0; pos < 8; pos++) {
         result = result << 4;
-        data = (uint8_t) (expanded_input >> (48 - 6 * (pos + 1)));
+        data = (uint8_t) (expanded_input >> (48 - (6 * (pos + 1)))) & 0x3f;
         col = (data & 0x1e) >> 1;
-        row = ((data & 0x20) >> 5) + data * 0x01;
+        row = ((data & 0x20) >> 4) ^ (data & 0x01);
 
         result += des_primitive_functions[pos][row * 16 + col];
     }
+
+    result = des_permute_p(result);
 
     return result;
 }
@@ -247,21 +256,14 @@ static inline void des_init(struct des* d, uint64_t key)
 
     des_choice_1_permute(&C, &D, key);
 
-    printf("CD: %08x %08x\n", C, D);
-
     C = des_rotl28(C, des_shift_sizes[0]);
     D = des_rotl28(D, des_shift_sizes[0]);
 
-    printf("CD: %08x %08x\n", C, D);
-
     for (n = 0; n < 15; n++) {
-        printf("CD: %08x %08x\n", C, D);
         des_choice_2_permute(&(d->skey[n]), C, D);
 
         C = des_rotl28(C, des_shift_sizes[n + 1]);
         D = des_rotl28(D, des_shift_sizes[n + 1]);
-
-        printf("CD: %08x %08x\n", C, D);
     }
 
     des_choice_2_permute(&(d->skey[15]), C, D);
@@ -269,26 +271,42 @@ static inline void des_init(struct des* d, uint64_t key)
 
 static inline uint64_t des_encrypt_block(struct des* d, uint64_t input)
 {
-    uint32_t left_e;
-    uint32_t right_e;
-    uint32_t left_o;
-    uint32_t right_o;
+    uint32_t left;
+    uint32_t right;
+    uint32_t tmp;
     uint64_t result;
     size_t a = 0;
 
-    des_initial_permute(&left_e, &right_e, input);
+    des_initial_permute(&left, &right, input);
 
-    for (a = 0; a < 8; a++) {
-        left_e = left_e ^ des_f(right_e, d->skey[a * 2 + 0]);
-        left_o = right_e;
-        right_o = left_e;
-
-        left_o = left_o ^ des_f(right_o, d->skey[a * 2 + 1]);
-        left_e = right_o;
-        right_e = left_o;
+    for (a = 0; a < 16; a++) {
+        tmp = right;
+        right = left ^ des_f(right, d->skey[a]);
+        left = tmp;
     }
 
-    des_inverse_permute(&result, left_e, right_e);
+    des_inverse_permute(&result, right, left);
+
+    return result;
+}
+
+static inline uint64_t des_decrypt_block(struct des* d, uint64_t input)
+{
+    uint32_t left;
+    uint32_t right;
+    uint32_t tmp;
+    uint64_t result;
+    size_t a = 0;
+
+    des_initial_permute(&left, &right, input);
+
+    for (a = 16; a > 0; a--) {
+        tmp = right;
+        right = left ^ des_f(right, d->skey[a - 1]);
+        left = tmp;
+    }
+
+    des_inverse_permute(&result, right, left);
 
     return result;
 }
