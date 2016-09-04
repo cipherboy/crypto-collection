@@ -1,25 +1,25 @@
 /*
  * Copyright (C) 2016 Alexander Scheel
  *
- * Implementation of the aes128 encryption algorithm per FIPS 197. See docs for
+ * Implementation of the aes192 encryption algorithm per FIPS 197. See docs for
  * the specification.
 */
 
 #pragma once
-#ifndef CC_AES128_H
-#define CC_AES128_H
+#ifndef CC_AES192_H
+#define CC_AES192_H
 
 #include "stdint.h"
 #include "stdlib.h"
 #include "stdio.h"
 
-struct aes128 {
-    uint32_t skey[44];
+struct aes192 {
+    uint32_t skey[52];
 };
 
-const uint32_t aes128_round_constants[30] = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000, 0x6c000000, 0xd8000000, 0xab000000, 0x4d000000, 0x9a000000, 0x2f000000, 0x5e000000, 0xbc000000, 0x63000000, 0xc6000000, 0x97000000, 0x35000000, 0x6a000000, 0xd4000000, 0xb3000000, 0x7d000000, 0xfa000000, 0xef000000, 0xc5000000};
+const uint32_t aes192_round_constants[30] = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000, 0x6c000000, 0xd8000000, 0xab000000, 0x4d000000, 0x9a000000, 0x2f000000, 0x5e000000, 0xbc000000, 0x63000000, 0xc6000000, 0x97000000, 0x35000000, 0x6a000000, 0xd4000000, 0xb3000000, 0x7d000000, 0xfa000000, 0xef000000, 0xc5000000};
 
-const uint8_t aes128_sbox[256] = {
+const uint8_t aes192_sbox[256] = {
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
     0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
@@ -38,7 +38,7 @@ const uint8_t aes128_sbox[256] = {
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
 
-static inline uint32_t aes128_subword(uint32_t input)
+static inline uint32_t aes192_subword(uint32_t input)
 {
     uint32_t output = 0;
     size_t i = 0;
@@ -47,32 +47,32 @@ static inline uint32_t aes128_subword(uint32_t input)
     for (i = 0; i < 4; i++) {
         output = output << 8;
         index = input >> ((3 - i) * 8);
-        output += aes128_sbox[index];
+        output += aes192_sbox[index];
     }
 
     return output;
 }
 
-static inline uint32_t aes128_rotl32(uint32_t input, uint32_t count)
+static inline uint32_t aes192_rotl32(uint32_t input, uint32_t count)
 {
     return ((input << count) | (input >> (32 - count)));
 }
 
-static inline void aes128_init(struct aes128* a, uint8_t key[16])
+static inline void aes192_init(struct aes192* a, uint8_t key[24])
 {
     uint32_t tmp = 0;
     size_t i = 0;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 6; i++) {
         a->skey[i] = (key[i * 4 + 0] << 24) + (key[i * 4 + 1] << 16) +
                      (key[i * 4 + 2] << 8) + (key[i * 4 + 3] << 0);
     }
-    for (i = 4; i < 44; i++) {
+    for (i = 6; i < 52; i++) {
         tmp = a->skey[i - 1];
-        if ((i % 4) == 0) {
-            tmp = aes128_subword(aes128_rotl32(tmp, 8)) ^ aes128_round_constants[i / 4];
+        if ((i % 6) == 0) {
+            tmp = aes192_subword(aes192_rotl32(tmp, 8)) ^ aes192_round_constants[i / 6];
         }
-        a->skey[i] = a->skey[i - 4] ^ tmp;
+        a->skey[i] = a->skey[i - 6] ^ tmp;
     }
 }
 
