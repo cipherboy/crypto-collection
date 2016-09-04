@@ -14,16 +14,16 @@ including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 
 ## Algorithms in Pure C
 
-| Algorithm      | x86_64         | ppc64be (P7)   | ppc64el (P8)   |
-| :------------- | :------------- | :------------- | :------------- |
-| md4            | yes            | yes            | yes            |
-| md5            | yes            | yes            | yes            |
-| sha1           | yes            | yes            | yes            |
-| sha224         | yes            | yes            | yes            |
-| sha256         | yes            | yes            | yes            |
-| sha384         | yes            | yes            | yes            |
-| sha512         | yes            | yes            | yes            |
-| blowfish       | yes            | yes            | yes            |
-| rc2            | yes            | yes            | yes            |
-| rc4            | yes            | yes            | yes            |
-| des            | yes            | yes            | yes            |
+| Algorithm | x86_64 | ppc64be (P7) | ppc64el (P8) | armv7 |
+| :-------- | :----- | :----------- | :----------- | :---- |
+| md4       | yes    | yes          | yes          | yes   |
+| md5       | yes    | yes          | yes          | yes   |
+| sha1      | yes    | yes          | yes          | yes   |
+| sha2-224  | yes    | yes          | yes          | yes   |
+| sha2-256  | yes    | yes          | yes          | yes   |
+| sha2-384  | yes    | yes          | yes          | yes   |
+| sha2-512  | yes    | yes          | yes          | yes   |
+| blowfish  | yes    | yes          | yes          | yes   |
+| rc2       | yes    | yes          | yes          | yes   |
+| rc4       | yes    | yes          | yes          | yes   |
+| des       | yes    | yes          | yes          | yes   |
