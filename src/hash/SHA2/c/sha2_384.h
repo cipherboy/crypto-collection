@@ -1,35 +1,35 @@
 /*
  * Copyright (C) 2016 Alexander Scheel
  *
- * Implementation of the sha512 hash algorithm per RFC 1321. See docs for the
+ * Implementation of the sha2_384 hash algorithm per RFC 1321. See docs for the
  * specification.
  *
  *
  * Usage:
  *
- *     struct sha512 m;
- *     sha512_init(&m);
- *     sha512_sum("The quick brown fox jumps over the lazy dog");
- *     // Note, sha512_sum returns the resulting sha512 digest
+ *     struct sha2_384 m;
+ *     sha2_384_init(&m);
+ *     sha2_384_sum("The quick brown fox jumps over the lazy dog");
+ *     // Note, sha2_384_sum returns the resulting sha2_384 digest
  *
  *
  * Alternative usage:
  *
- *     struct sha512 m;
- *     sha512_init(&m);
- *     sha512_update(&m, "The quick brown fox jumps over the lazy dog", 43);
- *     sha512_finalize(&m);
+ *     struct sha2_384 m;
+ *     sha2_384_init(&m);
+ *     sha2_384_update(&m, "The quick brown fox jumps over the lazy dog", 43);
+ *     sha2_384_finalize(&m);
 */
 
 #pragma once
-#ifndef CC_SHA512_H
-#define CC_SHA512_H
+#ifndef CC_SHA2_384_H
+#define CC_SHA2_384_H
 
 #include "stdint.h"
 #include "string.h"
 
-struct sha512 {
-    uint8_t digest[64];
+struct sha2_384 {
+    uint8_t digest[48];
 
     uint64_t h[8];
     uint64_t len;
@@ -38,47 +38,47 @@ struct sha512 {
     size_t p_len;
 };
 
-extern inline uint64_t sha512_rotl64(uint64_t data, uint64_t count)
+extern inline uint64_t sha2_384_rotl64(uint64_t data, uint64_t count)
 {
     return ((data << count) | (data >> (64 - count)));
 }
 
-extern inline uint64_t sha512_rotr64(uint64_t data, uint64_t count)
+extern inline uint64_t sha2_384_rotr64(uint64_t data, uint64_t count)
 {
     return ((data << (64 - count)) | (data >> count));
 }
 
-extern inline uint64_t sha512_ch(uint64_t x, uint64_t y, uint64_t z)
+extern inline uint64_t sha2_384_ch(uint64_t x, uint64_t y, uint64_t z)
 {
     return (x & y) ^ ((~x) & z);
 }
 
-extern inline uint64_t sha512_mj(uint64_t x, uint64_t y, uint64_t z)
+extern inline uint64_t sha2_384_mj(uint64_t x, uint64_t y, uint64_t z)
 {
     return (x & y) ^ (x & z) ^ (y & z);
 }
 
-extern inline uint64_t sha512_bsig0(uint64_t x)
+extern inline uint64_t sha2_384_bsig0(uint64_t x)
 {
-    return sha512_rotr64(x, 28) ^ sha512_rotr64(x, 34) ^ sha512_rotr64(x, 39);
+    return sha2_384_rotr64(x, 28) ^ sha2_384_rotr64(x, 34) ^ sha2_384_rotr64(x, 39);
 }
 
-extern inline uint64_t sha512_bsig1(uint64_t x)
+extern inline uint64_t sha2_384_bsig1(uint64_t x)
 {
-    return sha512_rotr64(x, 14) ^ sha512_rotr64(x, 18) ^ sha512_rotr64(x, 41);
+    return sha2_384_rotr64(x, 14) ^ sha2_384_rotr64(x, 18) ^ sha2_384_rotr64(x, 41);
 }
 
-extern inline uint64_t sha512_ssig0(uint64_t x)
+extern inline uint64_t sha2_384_ssig0(uint64_t x)
 {
-    return sha512_rotr64(x, 1) ^ sha512_rotr64(x, 8) ^ (x >> 7);
+    return sha2_384_rotr64(x, 1) ^ sha2_384_rotr64(x, 8) ^ (x >> 7);
 }
 
-extern inline uint64_t sha512_ssig1(uint64_t x)
+extern inline uint64_t sha2_384_ssig1(uint64_t x)
 {
-    return sha512_rotr64(x, 19) ^ sha512_rotr64(x, 61) ^ (x >> 6);
+    return sha2_384_rotr64(x, 19) ^ sha2_384_rotr64(x, 61) ^ (x >> 6);
 }
 
-extern inline void sha512_core(struct sha512* m)
+extern inline void sha2_384_core(struct sha2_384* m)
 {
     size_t t = 0;
     uint64_t w[80];
@@ -130,7 +130,7 @@ extern inline void sha512_core(struct sha512* m)
     }
 
     for (t = 16; t < 80; t++) {
-        w[t] = sha512_ssig1(w[t - 2]) + w[t - 7] + sha512_ssig0(
+        w[t] = sha2_384_ssig1(w[t - 2]) + w[t - 7] + sha2_384_ssig0(
                    w[t - 15]) + w[t - 16];
     }
 
@@ -145,8 +145,8 @@ extern inline void sha512_core(struct sha512* m)
     h[7] = m->h[7];
 
     for (t = 0; t < 80; t++) {
-        tmp1 = h[7] + sha512_bsig1(h[4]) + sha512_ch(h[4], h[5], h[6]) + K[t] + w[t];
-        tmp2 = sha512_bsig0(h[0]) + sha512_mj(h[0], h[1], h[2]);
+        tmp1 = h[7] + sha2_384_bsig1(h[4]) + sha2_384_ch(h[4], h[5], h[6]) + K[t] + w[t];
+        tmp2 = sha2_384_bsig0(h[0]) + sha2_384_mj(h[0], h[1], h[2]);
 
         h[7] = h[6];
         h[6] = h[5];
@@ -169,30 +169,30 @@ extern inline void sha512_core(struct sha512* m)
     m->h[7] += h[7];
 }
 
-extern inline void sha512_init(struct sha512* m)
+extern inline void sha2_384_init(struct sha2_384* m)
 {
     m->p_len = 0;
-    for (m->p_len = 0; m->p_len < 64; m->p_len++) {
+    for (m->p_len = 0; m->p_len < 48; m->p_len++) {
         m->digest[m->p_len] = 0;
     }
     for (m->p_len = 0; m->p_len < 128; m->p_len++) {
         m->partial[m->p_len] = 0;
     }
 
-    m->h[0] = 0x6a09e667f3bcc908ll;
-    m->h[1] = 0xbb67ae8584caa73bll;
-    m->h[2] = 0x3c6ef372fe94f82bll;
-    m->h[3] = 0xa54ff53a5f1d36f1ll;
-    m->h[4] = 0x510e527fade682d1ll;
-    m->h[5] = 0x9b05688c2b3e6c1fll;
-    m->h[6] = 0x1f83d9abfb41bd6bll;
-    m->h[7] = 0x5be0cd19137e2179ll;
+    m->h[0] = 0xcbbb9d5dc1059ed8ll;
+    m->h[1] = 0x629a292a367cd507ll;
+    m->h[2] = 0x9159015a3070dd17ll;
+    m->h[3] = 0x152fecd8f70e5939ll;
+    m->h[4] = 0x67332667ffc00b31ll;
+    m->h[5] = 0x8eb44a8768581511ll;
+    m->h[6] = 0xdb0c2e0d64f98fa7ll;
+    m->h[7] = 0x47b5481dbefa4fa4ll;
 
     m->len = 0;
     m->p_len = 0;
 }
 
-extern inline void sha512_update(struct sha512* m, char* msg, uint64_t len)
+extern inline void sha2_384_update(struct sha2_384* m, char* msg, uint64_t len)
 {
     size_t i = 0;
 
@@ -200,7 +200,7 @@ extern inline void sha512_update(struct sha512* m, char* msg, uint64_t len)
     for (i = 0; i < len; i++) {
         if (m->p_len == 128) {
             m->p_len = 0;
-            sha512_core(m);
+            sha2_384_core(m);
         }
 
         m->partial[m->p_len] = (uint8_t)((unsigned char) msg[i]);
@@ -208,7 +208,7 @@ extern inline void sha512_update(struct sha512* m, char* msg, uint64_t len)
     }
 }
 
-extern inline void sha512_finalize(struct sha512* m)
+extern inline void sha2_384_finalize(struct sha2_384* m)
 {
     if (m->p_len > 119) {
         m->partial[m->p_len] = 0x80;
@@ -219,7 +219,7 @@ extern inline void sha512_finalize(struct sha512* m)
         }
 
         m->p_len = 0;
-        sha512_core(m);
+        sha2_384_core(m);
     } else {
         m->partial[m->p_len] = 0x80;
         m->p_len += 1;
@@ -242,7 +242,7 @@ extern inline void sha512_finalize(struct sha512* m)
     m->partial[126] = (uint8_t) (m->len >>  8);
     m->partial[127] = (uint8_t) (m->len >>  0);
 
-    sha512_core(m);
+    sha2_384_core(m);
 
     for (m->p_len = 0; m->p_len < 8; m->p_len++) {
         m->digest[(m->p_len * 8) + 0] = (uint8_t) (m->h[m->p_len] >> 56);
@@ -259,16 +259,16 @@ extern inline void sha512_finalize(struct sha512* m)
 }
 
 /*
- * sha512 sha512_sum
+ * sha2_384 sha2_384_sum
  *
- * Computes the sha512 sum of the msg and finalizes the digest, which is returned.
+ * Computes the sha2_384 sum of the msg and finalizes the digest, which is returned.
 */
-extern inline uint8_t* sha512_sum(struct sha512* m, char* msg)
+extern inline uint8_t* sha2_384_sum(struct sha2_384* m, char* msg)
 {
-    sha512_init(m);
-    sha512_update(m, msg, strlen(msg));
-    sha512_finalize(m);
+    sha2_384_init(m);
+    sha2_384_update(m, msg, strlen(msg));
+    sha2_384_finalize(m);
     return m->digest;
 }
 
-#endif // CC_sha512_H
+#endif // CC_sha2_384_H

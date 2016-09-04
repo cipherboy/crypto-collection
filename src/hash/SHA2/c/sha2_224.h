@@ -1,35 +1,35 @@
 /*
  * Copyright (C) 2016 Alexander Scheel
  *
- * Implementation of the sha256 hash algorithm per RFC 1321. See docs for the
+ * Implementation of the sha2_224 hash algorithm per RFC 11. See docs for the
  * specification.
  *
  *
  * Usage:
  *
- *     struct sha256 m;
- *     sha256_init(&m);
- *     sha256_sum("The quick brown fox jumps over the lazy dog");
- *     // Note, sha256_sum returns the resulting sha256 digest
+ *     struct sha2_224 m;
+ *     sha2_224_init(&m);
+ *     sha2_224_sum("The quick brown fox jumps over the lazy dog");
+ *     // Note, sha2_224_sum returns the resulting sha2_224 digest
  *
  *
  * Alternative usage:
  *
- *     struct sha256 m;
- *     sha256_init(&m);
- *     sha256_update(&m, "The quick brown fox jumps over the lazy dog", 43);
- *     sha256_finalize(&m);
+ *     struct sha2_224 m;
+ *     sha2_224_init(&m);
+ *     sha2_224_update(&m, "The quick brown fox jumps over the lazy dog", 43);
+ *     sha2_224_finalize(&m);
 */
 
 #pragma once
-#ifndef CC_SHA256_H
-#define CC_SHA256_H
+#ifndef CC_SHA2_224_H
+#define CC_SHA2_224_H
 
 #include "stdint.h"
 #include "string.h"
 
-struct sha256 {
-    uint8_t digest[32];
+struct sha2_224 {
+    uint8_t digest[28];
 
     uint32_t h[8];
     uint64_t len;
@@ -38,47 +38,47 @@ struct sha256 {
     size_t p_len;
 };
 
-extern inline uint32_t sha256_rotl32(uint32_t data, uint32_t count)
+extern inline uint32_t sha2_224_rotl32(uint32_t data, uint32_t count)
 {
     return ((data << count) | (data >> (32 - count)));
 }
 
-extern inline uint32_t sha256_rotr32(uint32_t data, uint32_t count)
+extern inline uint32_t sha2_224_rotr32(uint32_t data, uint32_t count)
 {
     return ((data << (32 - count)) | (data >> count));
 }
 
-extern inline uint32_t sha256_ch(uint32_t x, uint32_t y, uint32_t z)
+extern inline uint32_t sha2_224_ch(uint32_t x, uint32_t y, uint32_t z)
 {
     return (x & y) ^ ((~x) & z);
 }
 
-extern inline uint32_t sha256_mj(uint32_t x, uint32_t y, uint32_t z)
+extern inline uint32_t sha2_224_mj(uint32_t x, uint32_t y, uint32_t z)
 {
     return (x & y) ^ (x & z) ^ (y & z);
 }
 
-extern inline uint32_t sha256_bsig0(uint32_t x)
+extern inline uint32_t sha2_224_bsig0(uint32_t x)
 {
-    return sha256_rotr32(x, 2) ^ sha256_rotr32(x, 13) ^ sha256_rotr32(x, 22);
+    return sha2_224_rotr32(x, 2) ^ sha2_224_rotr32(x, 13) ^ sha2_224_rotr32(x, 22);
 }
 
-extern inline uint32_t sha256_bsig1(uint32_t x)
+extern inline uint32_t sha2_224_bsig1(uint32_t x)
 {
-    return sha256_rotr32(x, 6) ^ sha256_rotr32(x, 11) ^ sha256_rotr32(x, 25);
+    return sha2_224_rotr32(x, 6) ^ sha2_224_rotr32(x, 11) ^ sha2_224_rotr32(x, 25);
 }
 
-extern inline uint32_t sha256_ssig0(uint32_t x)
+extern inline uint32_t sha2_224_ssig0(uint32_t x)
 {
-    return sha256_rotr32(x, 7) ^ sha256_rotr32(x, 18) ^ (x >> 3);
+    return sha2_224_rotr32(x, 7) ^ sha2_224_rotr32(x, 18) ^ (x >> 3);
 }
 
-extern inline uint32_t sha256_ssig1(uint32_t x)
+extern inline uint32_t sha2_224_ssig1(uint32_t x)
 {
-    return sha256_rotr32(x, 17) ^ sha256_rotr32(x, 19) ^ (x >> 10);
+    return sha2_224_rotr32(x, 17) ^ sha2_224_rotr32(x, 19) ^ (x >> 10);
 }
 
-extern inline void sha256_core(struct sha256* m)
+extern inline void sha2_224_core(struct sha2_224* m)
 {
     size_t t = 0;
     uint32_t w[64];
@@ -112,7 +112,7 @@ extern inline void sha256_core(struct sha256* m)
     }
 
     for (t = 16; t < 64; t++) {
-        w[t] = sha256_ssig1(w[t - 2]) + w[t - 7] + sha256_ssig0(
+        w[t] = sha2_224_ssig1(w[t - 2]) + w[t - 7] + sha2_224_ssig0(
                    w[t - 15]) + w[t - 16];
     }
 
@@ -127,8 +127,8 @@ extern inline void sha256_core(struct sha256* m)
     h[7] = m->h[7];
 
     for (t = 0; t < 64; t++) {
-        tmp1 = h[7] + sha256_bsig1(h[4]) + sha256_ch(h[4], h[5], h[6]) + K[t] + w[t];
-        tmp2 = sha256_bsig0(h[0]) + sha256_mj(h[0], h[1], h[2]);
+        tmp1 = h[7] + sha2_224_bsig1(h[4]) + sha2_224_ch(h[4], h[5], h[6]) + K[t] + w[t];
+        tmp2 = sha2_224_bsig0(h[0]) + sha2_224_mj(h[0], h[1], h[2]);
 
         h[7] = h[6];
         h[6] = h[5];
@@ -151,30 +151,30 @@ extern inline void sha256_core(struct sha256* m)
     m->h[7] += h[7];
 }
 
-extern inline void sha256_init(struct sha256* m)
+extern inline void sha2_224_init(struct sha2_224* m)
 {
     m->p_len = 0;
-    for (m->p_len = 0; m->p_len < 32; m->p_len++) {
+    for (m->p_len = 0; m->p_len < 28; m->p_len++) {
         m->digest[m->p_len] = 0;
     }
     for (m->p_len = 0; m->p_len < 64; m->p_len++) {
         m->partial[m->p_len] = 0;
     }
 
-    m->h[0] = 0x6a09e667;
-    m->h[1] = 0xbb67ae85;
-    m->h[2] = 0x3c6ef372;
-    m->h[3] = 0xa54ff53a;
-    m->h[4] = 0x510e527f;
-    m->h[5] = 0x9b05688c;
-    m->h[6] = 0x1f83d9ab;
-    m->h[7] = 0x5be0cd19;
+    m->h[0] = 0xc1059ed8;
+    m->h[1] = 0x367cd507;
+    m->h[2] = 0x3070dd17;
+    m->h[3] = 0xf70e5939;
+    m->h[4] = 0xffc00b31;
+    m->h[5] = 0x68581511;
+    m->h[6] = 0x64f98fa7;
+    m->h[7] = 0xbefa4fa4;
 
     m->len = 0;
     m->p_len = 0;
 }
 
-extern inline void sha256_update(struct sha256* m, char* msg, uint64_t len)
+extern inline void sha2_224_update(struct sha2_224* m, char* msg, uint64_t len)
 {
     size_t i = 0;
 
@@ -182,7 +182,7 @@ extern inline void sha256_update(struct sha256* m, char* msg, uint64_t len)
     for (i = 0; i < len; i++) {
         if (m->p_len == 64) {
             m->p_len = 0;
-            sha256_core(m);
+            sha2_224_core(m);
         }
 
         m->partial[m->p_len] = (uint8_t)((unsigned char) msg[i]);
@@ -190,7 +190,7 @@ extern inline void sha256_update(struct sha256* m, char* msg, uint64_t len)
     }
 }
 
-extern inline void sha256_finalize(struct sha256* m)
+extern inline void sha2_224_finalize(struct sha2_224* m)
 {
     if (m->p_len > 55) {
         m->partial[m->p_len] = 0x80;
@@ -201,7 +201,7 @@ extern inline void sha256_finalize(struct sha256* m)
         }
 
         m->p_len = 0;
-        sha256_core(m);
+        sha2_224_core(m);
     } else {
         m->partial[m->p_len] = 0x80;
         m->p_len += 1;
@@ -224,9 +224,9 @@ extern inline void sha256_finalize(struct sha256* m)
     m->partial[62] = (uint8_t) (m->len >>  8);
     m->partial[63] = (uint8_t) (m->len >>  0);
 
-    sha256_core(m);
+    sha2_224_core(m);
 
-    for (m->p_len = 0; m->p_len < 8; m->p_len++) {
+    for (m->p_len = 0; m->p_len < 7; m->p_len++) {
         m->digest[(m->p_len * 4) + 0] = (uint8_t) (m->h[m->p_len] >> 24);
         m->digest[(m->p_len * 4) + 1] = (uint8_t) (m->h[m->p_len] >> 16);
         m->digest[(m->p_len * 4) + 2] = (uint8_t) (m->h[m->p_len] >> 8);
@@ -237,16 +237,16 @@ extern inline void sha256_finalize(struct sha256* m)
 }
 
 /*
- * sha256 sha256_sum
+ * sha2_224 sha2_224_sum
  *
- * Computes the sha256 sum of the msg and finalizes the digest, which is returned.
+ * Computes the sha2_224 sum of the msg and finalizes the digest, which is returned.
 */
-extern inline uint8_t* sha256_sum(struct sha256* m, char* msg)
+extern inline uint8_t* sha2_224_sum(struct sha2_224* m, char* msg)
 {
-    sha256_init(m);
-    sha256_update(m, msg, strlen(msg));
-    sha256_finalize(m);
+    sha2_224_init(m);
+    sha2_224_update(m, msg, strlen(msg));
+    sha2_224_finalize(m);
     return m->digest;
 }
 
-#endif // CC_sha256_H
+#endif // CC_sha2_224_H
