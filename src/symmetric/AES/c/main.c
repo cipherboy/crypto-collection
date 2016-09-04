@@ -34,6 +34,7 @@ void test_aes128_encrypt()
     aes128_init(&a, key);
     aes128_encrypt(&a, plaintext);
 
+    printf("Encrypt: \n");
     printf("Actual:   ");
     for (size_t i = 0; i < 16; i++) {
         printf("%02x", a.block[i]);
@@ -43,6 +44,21 @@ void test_aes128_encrypt()
     printf("Expected: ");
     for (size_t i = 0; i < 16; i++) {
         printf("%02x", ciphertext[i]);
+    }
+    printf("\n\n");
+
+    aes128_decrypt(&a, ciphertext);
+
+    printf("Decrypt: \n");
+    printf("Actual:   ");
+    for (size_t i = 0; i < 16; i++) {
+        printf("%02x", a.block[i]);
+    }
+    printf("\n");
+
+    printf("Expected: ");
+    for (size_t i = 0; i < 16; i++) {
+        printf("%02x", plaintext[i]);
     }
     printf("\n\n");
 }
@@ -83,6 +99,21 @@ void test_aes192_encrypt()
         printf("%02x", ciphertext[i]);
     }
     printf("\n\n");
+
+    aes192_decrypt(&a, ciphertext);
+
+    printf("Decrypt: \n");
+    printf("Actual:   ");
+    for (size_t i = 0; i < 16; i++) {
+        printf("%02x", a.block[i]);
+    }
+    printf("\n");
+
+    printf("Expected: ");
+    for (size_t i = 0; i < 16; i++) {
+        printf("%02x", plaintext[i]);
+    }
+    printf("\n\n");
 }
 
 void test_aes256_key_expansion()
@@ -120,6 +151,21 @@ void test_aes256_encrypt()
         printf("%02x", ciphertext[i]);
     }
     printf("\n\n");
+
+    aes256_decrypt(&a, ciphertext);
+
+    printf("Decrypt: \n");
+    printf("Actual:   ");
+    for (size_t i = 0; i < 16; i++) {
+        printf("%02x", a.block[i]);
+    }
+    printf("\n");
+
+    printf("Expected: ");
+    for (size_t i = 0; i < 16; i++) {
+        printf("%02x", plaintext[i]);
+    }
+    printf("\n\n");
 }
 
 int main()
@@ -133,13 +179,13 @@ int main()
     printf("Expanding 256-bit key: \n");
     test_aes256_key_expansion();
 
-    printf("Testing 128-bit encryption: \n");
+    printf("Testing 128-bit encryption/decryption: \n");
     test_aes128_encrypt();
 
-    printf("Testing 192-bit encryption: \n");
+    printf("Testing 192-bit encryption/decryption: \n");
     test_aes192_encrypt();
 
-    printf("Testing 256-bit encryption: \n");
+    printf("Testing 256-bit encryption/decryption: \n");
     test_aes256_encrypt();
 
     return 0;
