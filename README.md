@@ -27,3 +27,6 @@ including Rust and Go, and optimizing the algorithms for PPC64(be/el).
 | rc2       | yes    | yes          | yes          | yes   |
 | rc4       | yes    | yes          | yes          | yes   |
 | des       | yes    | yes          | yes          | yes   |
+| aes-128   | yes    | yes          | yes          | yes   |
+| aes-192   | yes    | yes          | yes          | yes   |
+| aes-256   | yes    | yes          | yes          | yes   |
