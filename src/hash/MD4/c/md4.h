@@ -319,6 +319,7 @@ extern inline void md4_init(struct md4* m)
         m->partial[m->p_len] = 0;
     }
 
+    // Magic values from the specification.
     m->s[0] = 0x67452301;
     m->s[1] = 0xEFCDAB89;
     m->s[2] = 0x98BADCFE;
@@ -341,6 +342,9 @@ extern inline void md4_update(struct md4* m, char* msg, uint64_t len)
     for (i = 0; i < len; i++) {
         if (m->p_len == 64) {
             m->p_len = 0;
+
+            // Once we finish a buffer, call the core md4 function to update
+            // state and recompute the current hash value.
             md4_core(m);
         }
 
@@ -376,7 +380,12 @@ extern inline void md4_update(struct md4* m, char* msg, uint64_t len)
 */
 extern inline void md4_finalize(struct md4* m)
 {
+    // There are two cases: where a message buffer is too full to fit the 0b10*
+    // padding with 64-bit length, and one where it can.
+
     if (m->p_len > 55) {
+        // If the length is too short, add the 0b10* and pad out the block,
+        // then call the core md4 function to update state.
         m->partial[m->p_len] = 0x80;
         m->p_len += 1;
 
@@ -387,10 +396,12 @@ extern inline void md4_finalize(struct md4* m)
         m->p_len = 0;
         md4_core(m);
     } else {
+        // Enough room, so just add the 0b10* and increment the length.
         m->partial[m->p_len] = 0x80;
         m->p_len += 1;
     }
 
+    // Finish off the block with zeroes.
     for (; m->p_len < 64; m->p_len++) {
         m->partial[m->p_len] = 0x00;
     }
@@ -408,8 +419,12 @@ extern inline void md4_finalize(struct md4* m)
     m->partial[62] = (uint8_t) (m->len >> 48);
     m->partial[63] = (uint8_t) (m->len >> 56);
 
+    // Update the md4 state one last time.
     md4_core(m);
 
+    // Convert from the internal state to a little-endian representation
+    // as the digest. Left as uint8 values; can be converted to hex or base64
+    // as desired.
     for (m->p_len = 0; m->p_len < 4; m->p_len++) {
         m->digest[(m->p_len * 4) + 0] = (uint8_t) (m->s[m->p_len] >> 0);
         m->digest[(m->p_len * 4) + 1] = (uint8_t) (m->s[m->p_len] >> 8);
@@ -427,9 +442,11 @@ extern inline void md4_finalize(struct md4* m)
 */
 extern inline uint8_t* md4_sum(struct md4* m, char* msg)
 {
+    // Reinitialize the structure, add the message, and finalize the hash.
     md4_init(m);
     md4_update(m, msg, strlen(msg));
     md4_finalize(m);
+
     return m->digest;
 }
 
