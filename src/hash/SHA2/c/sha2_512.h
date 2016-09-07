@@ -60,12 +60,14 @@ extern inline uint64_t sha2_512_mj(uint64_t x, uint64_t y, uint64_t z)
 
 extern inline uint64_t sha2_512_bsig0(uint64_t x)
 {
-    return sha2_512_rotr64(x, 28) ^ sha2_512_rotr64(x, 34) ^ sha2_512_rotr64(x, 39);
+    return sha2_512_rotr64(x, 28) ^ sha2_512_rotr64(x, 34) ^ sha2_512_rotr64(x,
+            39);
 }
 
 extern inline uint64_t sha2_512_bsig1(uint64_t x)
 {
-    return sha2_512_rotr64(x, 14) ^ sha2_512_rotr64(x, 18) ^ sha2_512_rotr64(x, 41);
+    return sha2_512_rotr64(x, 14) ^ sha2_512_rotr64(x, 18) ^ sha2_512_rotr64(x,
+            41);
 }
 
 extern inline uint64_t sha2_512_ssig0(uint64_t x)
@@ -145,7 +147,8 @@ extern inline void sha2_512_core(struct sha2_512* m)
     h[7] = m->h[7];
 
     for (t = 0; t < 80; t++) {
-        tmp1 = h[7] + sha2_512_bsig1(h[4]) + sha2_512_ch(h[4], h[5], h[6]) + K[t] + w[t];
+        tmp1 = h[7] + sha2_512_bsig1(h[4]) + sha2_512_ch(h[4], h[5],
+                h[6]) + K[t] + w[t];
         tmp2 = sha2_512_bsig0(h[0]) + sha2_512_mj(h[0], h[1], h[2]);
 
         h[7] = h[6];
@@ -192,7 +195,8 @@ extern inline void sha2_512_init(struct sha2_512* m)
     m->p_len = 0;
 }
 
-extern inline void sha2_512_update(struct sha2_512* m, char* msg, uint64_t len)
+extern inline void sha2_512_update(struct sha2_512* m, char* msg,
+                                   uint64_t len)
 {
     size_t i = 0;
 
