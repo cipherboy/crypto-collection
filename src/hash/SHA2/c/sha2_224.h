@@ -160,6 +160,80 @@ extern inline uint32_t sha2_224_ssig1(uint32_t x)
     return sha2_224_rotr32(x, 17) ^ sha2_224_rotr32(x, 19) ^ (x >> 10);
 }
 
+/*
+ * sha2_224 sha2_224_core
+ *
+ * Core of sha2_224 hash function; operates on a single round from m->partial
+ * and updates hash state in m->s.
+ *
+ * SHA-224 and SHA-256 perform identical processing on messages blocks
+ * and differ only in how H(0) is initialized and how they produce their
+ * final output.  They may be used to hash a message, M, having a length
+ * of L bits, where 0 <= L < 2^64.  The algorithm uses (1) a message
+ * schedule of sixty-four 32-bit words, (2) eight working variables of
+ * 32 bits each, and (3) a hash value of eight 32-bit words.
+ *
+ * The words of the message schedule are labeled W0, W1, ..., W63.  The
+ * eight working variables are labeled a, b, c, d, e, f, g, and h.  The
+ * words of the hash value are labeled H(i)0, H(i)1, ..., H(i)7, which
+ * will hold the initial hash value, H(0), replaced by each successive
+ * intermediate hash value (after each message block is processed),
+ * H(i), and ending with the final hash value, H(N), after all N blocks
+ * are processed.  They also use two temporary words, T1 and T2.
+ *
+ * The input message is padded as described in Section 4.1 above then
+ * parsed into 512-bit blocks, which are considered to be composed of 16
+ * 32-bit words M(i)0, M(i)1, ..., M(i)15.  The following computations
+ * are then performed for each of the N message blocks.  All addition is
+ * performed modulo 2^32.
+ *
+ *     For i = 1 to N
+ *
+ *         1. Prepare the message schedule W:
+ *          For t = 0 to 15
+ *             Wt = M(i)t
+ *          For t = 16 to 63
+ *             Wt = SSIG1(W(t-2)) + W(t-7) + SSIG0(t-15) + W(t-16)
+ *
+ *         2. Initialize the working variables:
+ *          a = H(i-1)0
+ *          b = H(i-1)1
+ *          c = H(i-1)2
+ *          d = H(i-1)3
+ *          e = H(i-1)4
+ *          f = H(i-1)5
+ *          g = H(i-1)6
+ *          h = H(i-1)7
+ *
+ *         3. Perform the main hash computation:
+ *          For t = 0 to 63
+ *             T1 = h + BSIG1(e) + CH(e,f,g) + Kt + Wt
+ *             T2 = BSIG0(a) + MAJ(a,b,c)
+ *             h = g
+ *             g = f
+ *             f = e
+ *             e = d + T1
+ *             d = c
+ *             c = b
+ *             b = a
+ *             a = T1 + T2
+ *
+ *         4. Compute the intermediate hash value H(i):
+ *              H(i)0 = a + H(i-1)0
+ *              H(i)1 = b + H(i-1)1
+ *              H(i)2 = c + H(i-1)2
+ *              H(i)3 = d + H(i-1)3
+ *              H(i)4 = e + H(i-1)4
+ *              H(i)5 = f + H(i-1)5
+ *              H(i)6 = g + H(i-1)6
+ *              H(i)7 = h + H(i-1)7
+ *
+ * After the above computations have been sequentially performed for all
+ * of the blocks in the message, the final output is calculated.  For
+ * SHA-256, this is the concatenation of all of H(N)0, H(N)1, through
+ * H(N)7.  For SHA-224, this is the concatenation of H(N)0, H(N)1,
+ * through H(N)6.
+*/
 extern inline void sha2_224_core(struct sha2_224* m)
 {
     size_t t = 0;
@@ -168,6 +242,27 @@ extern inline void sha2_224_core(struct sha2_224* m)
     uint32_t tmp1;
     uint32_t tmp2;
 
+    /*
+     * SHA-224 and SHA-256 use the same sequence of sixty-four constant
+     * 32-bit words, K0, K1, ..., K63.  These words represent the first
+     * thirty-two bits of the fractional parts of the cube roots of the
+     * first sixty-four prime numbers.  In hex, these constant words are as
+     * follows (from left to right):
+     *
+     *     428a2f98 71374491 b5c0fbcf e9b5dba5
+     *     3956c25b 59f111f1 923f82a4 ab1c5ed5
+     *     d807aa98 12835b01 243185be 550c7dc3
+     *     72be5d74 80deb1fe 9bdc06a7 c19bf174
+     *     e49b69c1 efbe4786 0fc19dc6 240ca1cc
+     *     2de92c6f 4a7484aa 5cb0a9dc 76f988da
+     *     983e5152 a831c66d b00327c8 bf597fc7
+     *     c6e00bf3 d5a79147 06ca6351 14292967
+     *     27b70a85 2e1b2138 4d2c6dfc 53380d13
+     *     650a7354 766a0abb 81c2c92e 92722c85
+     *     a2bfe8a1 a81a664b c24b8b70 c76c51a3
+     *     d192e819 d6990624 f40e3585 106aa070
+     *     19a4c116 1e376c08 2748774c 34b0bcb5
+    */
     static const uint32_t K[64] = {
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
         0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
@@ -234,6 +329,23 @@ extern inline void sha2_224_core(struct sha2_224* m)
     m->h[7] += h[7];
 }
 
+/*
+ * sha2_224 sha2_224_init
+ *
+ * Initializes sha2_224 struct with initial state seed, empties partial and digest
+ *
+ * For SHA-224, the initial hash value, H(0), consists of the following
+ * 32-bit words in hex:
+ *
+ *      H(0)0 = c1059ed8
+ *      H(0)1 = 367cd507
+ *      H(0)2 = 3070dd17
+ *      H(0)3 = f70e5939
+ *      H(0)4 = ffc00b31
+ *      H(0)5 = 68581511
+ *      H(0)6 = 64f98fa7
+ *      H(0)7 = befa4fa4
+*/
 extern inline void sha2_224_init(struct sha2_224* m)
 {
     m->p_len = 0;
@@ -257,6 +369,11 @@ extern inline void sha2_224_init(struct sha2_224* m)
     m->p_len = 0;
 }
 
+/*
+ * sha2_224 sha2_224_update
+ *
+ * Updates the state of the sha2_224 struct with new values
+*/
 extern inline void sha2_224_update(struct sha2_224* m, char* msg,
                                    uint64_t len)
 {
@@ -266,6 +383,9 @@ extern inline void sha2_224_update(struct sha2_224* m, char* msg,
     for (i = 0; i < len; i++) {
         if (m->p_len == 64) {
             m->p_len = 0;
+
+            // Once we finish a buffer, call the core sha2_224 function to update
+            // state and recompute the current hash value.
             sha2_224_core(m);
         }
 
@@ -274,6 +394,52 @@ extern inline void sha2_224_update(struct sha2_224* m, char* msg,
     }
 }
 
+/*
+ * sha2_224 sha2_224_finalize
+ *
+ * Finalizes the sha2_224 structure; pads the partial block as necessary. Also
+ * generates the message digest.
+ *
+ * Suppose a message has length L < 2^64.  Before it is input to the
+ * hash function, the message is padded on the right as follows:
+ *
+ * a.  "1" is appended.  Example: if the original message is
+ *     "01010000", this is padded to "010100001".
+ *
+ * b.  K "0"s are appended where K is the smallest, non-negative
+ *     solution to the equation
+ *
+ *         L + 1 + K = 448 (mod 512)
+ *
+ * c.  Then append the 64-bit block that is L in binary representation.
+ *     After appending this block, the length of the message will be a
+ *     multiple of 512 bits.
+ *
+ *      Example:  Suppose the original message is the bit string
+ *
+ *           01100001 01100010 01100011 01100100 01100101
+ *
+ *      After step (a), this gives
+ *
+ *           01100001 01100010 01100011 01100100 01100101 1
+ *
+ *      Since L = 40, the number of bits in the above is 41 and K = 407
+ *      "0"s are appended, making the total now 448.  This gives the
+ *      following in hex:
+ *
+ *           61626364 65800000 00000000 00000000
+ *           00000000 00000000 00000000 00000000
+ *           00000000 00000000 00000000 00000000
+ *           00000000 00000000
+ *
+ *      The 64-bit representation of L = 40 is hex 00000000 00000028.
+ *      Hence the final padded message is the following hex:
+ *
+ *           61626364 65800000 00000000 00000000
+ *           00000000 00000000 00000000 00000000
+ *           00000000 00000000 00000000 00000000
+ *           00000000 00000000 00000000 00000028
+*/
 extern inline void sha2_224_finalize(struct sha2_224* m)
 {
     if (m->p_len > 55) {
@@ -298,7 +464,7 @@ extern inline void sha2_224_finalize(struct sha2_224* m)
     // Bytes to bits
     m->len *= 8;
 
-    // Little endian representation of m->len
+    // Big endian representation of m->len
     m->partial[56] = (uint8_t) (m->len >> 56);
     m->partial[57] = (uint8_t) (m->len >> 48);
     m->partial[58] = (uint8_t) (m->len >> 40);
