@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2016 Alexander Scheel
  *
- * Implementation of the sha2_384 hash algorithm per RFC 1321. See docs for the
+ * Implementation of the sha2_384 hash algorithm per RFC 4634. See docs for the
  * specification.
  *
  *
@@ -28,6 +28,16 @@
 #include "stdint.h"
 #include "string.h"
 
+/*
+ * struct sha2_384
+ *
+ * uint8_t digest[48]   -- public; digest after finalization
+ *
+ * uint64_t h[8]        -- internal; hash state variables
+ * uint64_t len         -- internal; length of input
+ * uint8_t partial[128] -- internal; partial block of input
+ * size_t p_len         -- internal; length of partial block
+*/
 struct sha2_384 {
     uint8_t digest[48];
 
@@ -38,11 +48,27 @@ struct sha2_384 {
     size_t p_len;
 };
 
+/*
+ * sha2_384 sha2_384_rotl64
+ *
+ * The rotate left (circular left shift) operation ROTL^n(x), where
+ * x is a w-bit word and n is an integer with 0 <= n < w, is
+ * defined by
+ *     ROTL^n(X) = (x<<n) OR (x>>w-n)
+*/
 extern inline uint64_t sha2_384_rotl64(uint64_t data, uint64_t count)
 {
     return ((data << count) | (data >> (64 - count)));
 }
 
+/*
+ * sha2_384 sha2_384_rotr64
+ *
+ * The rotate right (circular right shift) operation ROTR^n(x),
+ * where x is a w-bit word and n is an integer with 0 <= n < w, is
+ * defined by
+ *     ROTR^n(x) = (x>>n) OR (x<<(w-n))
+*/
 extern inline uint64_t sha2_384_rotr64(uint64_t data, uint64_t count)
 {
     return ((data << (64 - count)) | (data >> count));

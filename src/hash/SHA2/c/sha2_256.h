@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2016 Alexander Scheel
  *
- * Implementation of the sha2_256 hash algorithm per RFC 1321. See docs for the
+ * Implementation of the sha2_256 hash algorithm per RFC 4634. See docs for the
  * specification.
  *
  *
@@ -28,6 +28,16 @@
 #include "stdint.h"
 #include "string.h"
 
+/*
+ * struct sha2_256
+ *
+ * uint8_t digest[32]  -- public; digest after finalization
+ *
+ * uint32_t h[8]       -- internal; hash state variables
+ * uint64_t len        -- internal; length of input
+ * uint8_t partial[64] -- internal; partial block of input
+ * size_t p_len        -- internal; length of partial block
+*/
 struct sha2_256 {
     uint8_t digest[32];
 
@@ -38,43 +48,113 @@ struct sha2_256 {
     size_t p_len;
 };
 
+/*
+ * sha2_256 sha2_256_rotl32
+ *
+ * The rotate left (circular left shift) operation ROTL^n(x), where
+ * x is a w-bit word and n is an integer with 0 <= n < w, is
+ * defined by
+ *     ROTL^n(X) = (x<<n) OR (x>>w-n)
+*/
 extern inline uint32_t sha2_256_rotl32(uint32_t data, uint32_t count)
 {
     return ((data << count) | (data >> (32 - count)));
 }
 
+/*
+ * sha2_256 sha2_256_rotr32
+ *
+ * The rotate right (circular right shift) operation ROTR^n(x),
+ * where x is a w-bit word and n is an integer with 0 <= n < w, is
+ * defined by
+ *     ROTR^n(x) = (x>>n) OR (x<<(w-n))
+*/
 extern inline uint32_t sha2_256_rotr32(uint32_t data, uint32_t count)
 {
     return ((data << (32 - count)) | (data >> count));
 }
 
+/*
+ * sha2_224 sha2_224_ch
+ *
+ * SHA-224 and SHA-256 use six logical functions, where each function
+ * operates on 32-bit words, which are represented as x, y, and z. The
+ * result of each function is a new 32-bit word.
+ *
+ * CH( x, y, z) = (x AND y) XOR ( (NOT x) AND z)
+*/
 extern inline uint32_t sha2_256_ch(uint32_t x, uint32_t y, uint32_t z)
 {
     return (x & y) ^ ((~x) & z);
 }
 
+/*
+ * sha2_224 sha2_224_mj
+ *
+ * SHA-224 and SHA-256 use six logical functions, where each function
+ * operates on 32-bit words, which are represented as x, y, and z. The
+ * result of each function is a new 32-bit word.
+ *
+ * MAJ( x, y, z) = (x AND y) XOR (x AND z) XOR (y AND z)
+*/
 extern inline uint32_t sha2_256_mj(uint32_t x, uint32_t y, uint32_t z)
 {
     return (x & y) ^ (x & z) ^ (y & z);
 }
 
+/*
+ * sha2_224 sha2_224_bsig0
+ *
+ * SHA-224 and SHA-256 use six logical functions, where each function
+ * operates on 32-bit words, which are represented as x, y, and z. The
+ * result of each function is a new 32-bit word.
+ *
+ * BSIG0(x) = ROTR^2(x) XOR ROTR^13(x) XOR ROTR^22(x)
+*/
 extern inline uint32_t sha2_256_bsig0(uint32_t x)
 {
     return sha2_256_rotr32(x, 2) ^ sha2_256_rotr32(x, 13) ^ sha2_256_rotr32(x,
             22);
 }
 
+/*
+ * sha2_224 sha2_224_bsig1
+ *
+ * SHA-224 and SHA-256 use six logical functions, where each function
+ * operates on 32-bit words, which are represented as x, y, and z. The
+ * result of each function is a new 32-bit word.
+ *
+ * BSIG1(x) = ROTR^6(x) XOR ROTR^11(x) XOR ROTR^25(x)
+*/
 extern inline uint32_t sha2_256_bsig1(uint32_t x)
 {
     return sha2_256_rotr32(x, 6) ^ sha2_256_rotr32(x, 11) ^ sha2_256_rotr32(x,
             25);
 }
 
+/*
+ * sha2_224 sha2_224_ssig0
+ *
+ * SHA-224 and SHA-256 use six logical functions, where each function
+ * operates on 32-bit words, which are represented as x, y, and z. The
+ * result of each function is a new 32-bit word.
+ *
+ * SSIG0(x) = ROTR^7(x) XOR ROTR^18(x) XOR SHR^3(x)
+*/
 extern inline uint32_t sha2_256_ssig0(uint32_t x)
 {
     return sha2_256_rotr32(x, 7) ^ sha2_256_rotr32(x, 18) ^ (x >> 3);
 }
 
+/*
+ * sha2_224 sha2_224_ssig1
+ *
+ * SHA-224 and SHA-256 use six logical functions, where each function
+ * operates on 32-bit words, which are represented as x, y, and z. The
+ * result of each function is a new 32-bit word.
+ *
+ * SSIG1(x) = ROTR^17(x) XOR ROTR^19(x) XOR SHR^10(x)
+*/
 extern inline uint32_t sha2_256_ssig1(uint32_t x)
 {
     return sha2_256_rotr32(x, 17) ^ sha2_256_rotr32(x, 19) ^ (x >> 10);
