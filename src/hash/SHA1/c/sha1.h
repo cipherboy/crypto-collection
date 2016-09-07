@@ -121,12 +121,11 @@ extern inline uint32_t sha1_rotl32(uint32_t data, uint32_t count)
     return ((data << count) | (data >> (32 - count)));
 }
 
-
 /*
  * sha1 sha1_core
  *
  * Core of sha1 hash function; operates on a single round from m->partial
- * and updates hash state in m->s.
+ * and updates hash state in m->h.
  *
  * Now M(1), M(2), ... , M(n) are processed.  To process M(i), we
  * proceed as follows:
