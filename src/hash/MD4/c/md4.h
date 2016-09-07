@@ -359,7 +359,6 @@ extern inline void md4_update(struct md4* m, char* msg, uint64_t len)
  * Finalizes the md4 structure; pads the partial block as necessary. Also
  * generates the message digest.
  *
- * Rivest
  * The message is "padded" (extended) so that its length (in bits)
  * is congruent to 448, modulo 512.  That is, the message is
  * extended so that it is just 64 bits shy of being a multiple of
@@ -372,17 +371,16 @@ extern inline void md4_update(struct md4* m, char* msg, uint64_t len)
  * the length in bits of the padded message becomes congruent to
  * 448, modulo 512.
  *
- *  The message digest produced as output is A,B,C,D.  That is, we
- *  begin with the low-order byte of A, and end with the high-order
- *  byte of D.
- *  This completes the description of MD4.  A reference
- *  implementation in C is given in the Appendix.
+ * The message digest produced as output is A,B,C,D.  That is, we
+ * begin with the low-order byte of A, and end with the high-order
+ * byte of D.
+ * This completes the description of MD4.  A reference
+ * implementation in C is given in the Appendix.
 */
 extern inline void md4_finalize(struct md4* m)
 {
     // There are two cases: where a message buffer is too full to fit the 0b10*
     // padding with 64-bit length, and one where it can.
-
     if (m->p_len > 55) {
         // If the length is too short, add the 0b10* and pad out the block,
         // then call the core md4 function to update state.
