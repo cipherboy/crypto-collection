@@ -12,6 +12,9 @@
 #include "stdint.h"
 #include "stdlib.h"
 
+/*
+ * Constants for Blowfish algorithm: hexadecimal digits of Pi as initial subkeys
+*/
 const uint32_t blowfish_initial_subkeys[18] = {
     0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0,
     0x082efa98, 0xec4e6c89, 0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c,
@@ -193,11 +196,37 @@ const uint32_t blowfish_initial_sbox[1024] = {
     0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6
 };
 
+/*
+ * struct blowfish
+ *
+ * uint32_t P[18]   -- internal; P-array of 18 subkeys
+ * uint32_t S[1024] -- internal; 4 S-boxes of 256 entries
+ *
+ * Blowfish uses a large number of subkeys. These keys must be precomputed before any data encryption or decryption.
+ *
+ * 1. The P-array consists of 18 32-bit subkeys:
+ * P1, P2,..., P18.
+ *
+ * 2. There are four 32-bit S-boxes with 256 entries each:
+ * S1,0, S1,1,..., S1,255;
+ * S2,0, S2,1,..,, S2,255;
+ * S3,0, S3,1,..., S3,255;
+ * S4,0, S4,1,..,, S4,255.
+*/
 struct blowfish {
     uint32_t P[18];
     uint32_t S[1024];
 };
 
+/*
+ * blowfish blowfish_feistel
+ *
+ * Feistel function for blowfish which mixes in the S-box data
+ *
+ * Function F (see Figure 2):
+ * Divide xL into four eight-bit quarters: a, b, c, and d
+ * F(xL) = ((S1,a + S2,b mod 2^32) XOR S3,c) + S4,d mod 2^32
+*/
 extern inline uint32_t blowfish_feistel(struct blowfish* bf, uint32_t value)
 {
     uint8_t a = value >> 24;
@@ -209,6 +238,26 @@ extern inline uint32_t blowfish_feistel(struct blowfish* bf, uint32_t value)
            bf->S[3 * 256 + d];
 }
 
+/*
+ * blowfish blowfish_encrypt
+ *
+ * Encrypt a 64-bit of data (2x 32-bit halves) in place.
+ *
+ * Encryption:
+ *
+ * Blowfish is a Feistel network consisting of 16 rounds (see Figure 1). The input is a 64-bit data element, x.
+ *
+ * Divide x into two 32-bit halves: xL, xR
+ * For i = 1 to 16:
+ * xL = xL XOR Pi
+ * xR = F(xL) XOR xR
+ * Swap xL and xR
+ * Next i
+ * Swap xL and xR (Undo the last swap.)
+ * xR = xR XOR P17
+ * xL = xL XOR P18
+ * Recombine xL and xR
+*/
 extern inline void blowfish_encrypt(struct blowfish* bf, uint32_t* left,
                                     uint32_t* right)
 {
@@ -227,6 +276,13 @@ extern inline void blowfish_encrypt(struct blowfish* bf, uint32_t* left,
     *left = (*left) ^ bf->P[17];
 }
 
+/*
+ * blowfish blowfish_decrypt
+ *
+ * Decrypts a 64-bit of data (2x 32-bit halves) in place.
+ *
+ * Decryption is exactly the same as encryption, except that P1, P2,..., P18 are used in the reverse order.
+*/
 extern inline void blowfish_decrypt(struct blowfish* bf, uint32_t* left,
                                     uint32_t* right)
 {
@@ -245,6 +301,49 @@ extern inline void blowfish_decrypt(struct blowfish* bf, uint32_t* left,
     *left = (*left) ^ bf->P[0];
 }
 
+/*
+ * blowfish blowfish_init
+ *
+ * Initializes the blowfish structure by deriving subkeys from the master key.
+ *
+ *
+ * The subkeys are calculated using the Blowfish algorithm. The exact method is
+ * as follows:
+ *
+ * 1. Initialize first the P-array and then the four S-boxes, in order, with a
+ * fixed string. This string consists of the hexadecimal digits of pi (less the
+ * initial 3). For example:
+ *
+ * P1 = 0x243f6a88
+ * P2 = 0x85a308d3
+ * P3 = 0x13198a2e
+ * P4 = 0x03707344
+ *
+ * 2. XOR P1 with the first 32 bits of the key, XOR P2 with the second 32-bits
+ * of the key, and so on for all bits of the key (possibly up to P14).
+ * Repeatedly cycle through the key bits until the entire P-array has been
+ * XORed with key bits. (For every short key, there is at least one equivalent
+ * longer key; for example, if A is a 64-bit key, then AA, AAA, etc., are
+ * equivalent keys.)
+ *
+ * 3. Encrypt the all-zero string with the Blowfish algorithm, using the
+ * subkeys described in steps (1) and (2).
+ *
+ * 4. Replace P1 and P2 with the output of step (3).
+ *
+ * 5. Encrypt the output of step (3) using the Blowfish algorithm with the
+ * modified subkeys.
+ *
+ * 6. Replace P3 and P4 with the output of step (5).
+ *
+ * 7. Continue the process, replacing all entries of the P- array, and then all
+ * four S-boxes in order, with the output of the continuously-changing
+ * Blowfish algorithm.
+ *
+ * In total, 521 iterations are required to generate all required subkeys.
+ * Applications can store the subkeys rather than execute this derivation
+ * process multiple times.
+*/
 extern inline void blowfish_init(struct blowfish* bf, uint32_t* key,
                                  size_t key_len)
 {
