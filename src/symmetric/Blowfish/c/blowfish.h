@@ -202,7 +202,8 @@ const uint32_t blowfish_initial_sbox[1024] = {
  * uint32_t P[18]   -- internal; P-array of 18 subkeys
  * uint32_t S[1024] -- internal; 4 S-boxes of 256 entries
  *
- * Blowfish uses a large number of subkeys. These keys must be precomputed before any data encryption or decryption.
+ * Blowfish uses a large number of subkeys. These keys must be precomputed
+ * before any data encryption or decryption.
  *
  * 1. The P-array consists of 18 32-bit subkeys:
  * P1, P2,..., P18.
@@ -245,7 +246,8 @@ extern inline uint32_t blowfish_feistel(struct blowfish* bf, uint32_t value)
  *
  * Encryption:
  *
- * Blowfish is a Feistel network consisting of 16 rounds (see Figure 1). The input is a 64-bit data element, x.
+ * Blowfish is a Feistel network consisting of 16 rounds (see Figure 1). The
+ * input is a 64-bit data element, x.
  *
  * Divide x into two 32-bit halves: xL, xR
  * For i = 1 to 16:
@@ -281,7 +283,8 @@ extern inline void blowfish_encrypt(struct blowfish* bf, uint32_t* left,
  *
  * Decrypts a 64-bit of data (2x 32-bit halves) in place.
  *
- * Decryption is exactly the same as encryption, except that P1, P2,..., P18 are used in the reverse order.
+ * Decryption is exactly the same as encryption, except that P1, P2,..., P18
+ * are used in the reverse order.
 */
 extern inline void blowfish_decrypt(struct blowfish* bf, uint32_t* left,
                                     uint32_t* right)
