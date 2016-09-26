@@ -512,7 +512,7 @@ extern inline void sha2_384_finalize(struct sha2_384* m)
     for (m->p_len = 0; m->p_len < 8; m->p_len++) {
         m->digest[(m->p_len * 8) + 0] = (uint8_t) (m->h[m->p_len] >> 56);
         m->digest[(m->p_len * 8) + 1] = (uint8_t) (m->h[m->p_len] >> 48);
-        m->digest[(m->p_len * 8) + 2] = (uint8_t) (m->h[m->p_len] >> 42);
+        m->digest[(m->p_len * 8) + 2] = (uint8_t) (m->h[m->p_len] >> 40);
         m->digest[(m->p_len * 8) + 3] = (uint8_t) (m->h[m->p_len] >> 32);
         m->digest[(m->p_len * 8) + 4] = (uint8_t) (m->h[m->p_len] >> 24);
         m->digest[(m->p_len * 8) + 5] = (uint8_t) (m->h[m->p_len] >> 16);
