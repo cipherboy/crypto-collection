@@ -7,6 +7,7 @@
 #include "md4.h"
 #include "stdio.h"
 #include "strings.h"
+#include "time.h"
 
 void test_null()
 {
@@ -88,6 +89,56 @@ void test_foxcog()
     printf("\n\n");
 }
 
+time_t benchmark_driver(int size)
+{
+    struct md4 m;
+    md4_init(&m);
+
+    time_t start = time(NULL);
+
+    for (int i = 0; i < size; i++) {
+        md4_update(&m,
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   "aaaa",
+                   1024);
+    }
+
+    md4_finalize(&m);
+
+    time_t end = time(NULL);
+
+    printf("Message: \"a\"*1024*%d\nResult:  ", size);
+
+    for (int i = 0; i < 16; i ++) {
+        printf("%02x", m.digest[i]);
+    }
+    printf("\n");
+
+    return end - start;
+}
+
+void benchmark()
+{
+    printf("Benchmark: 8GB of data: %ju seconds\n",
+           benchmark_driver(8 * 1024 * 1024));
+}
+
 int main()
 {
     test_null();
@@ -95,4 +146,5 @@ int main()
     test_abc();
     test_foxdog();
     test_foxcog();
+    benchmark();
 }
